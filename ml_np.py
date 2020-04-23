@@ -11,10 +11,10 @@ weights=2*np.random.rand(30,51)-1
 
 
 sign = np.vectorize(lambda t: 1 if t>0 else -1)
+clamp = np.vectorize(lambda t: min(1,max(-1,t)))
 
 def test(epoch_num):
-    #out=sign(weights)
-    out=weights
+    out=sign(weights)
     
     file=open(os.getcwd()+"\\outputs\\epoch"+str(epoch_num)+".txt","w")
     for i in range(30):
@@ -72,28 +72,28 @@ def main():
 
     test(0)
 
-    #for each output node the goal is to reach GOAL or -GOAL depending on answer
-
     BATCH_SIZE=10000 #make this divisible by 10000
-    LEARNING_RATE=0.00000001
-    GOAL=10
-    for epoch_num in range(1,1000):
+    LEARNING_RATE=0.0000000005
+    GOAL=15.0
+    
+    for epoch_num in range(1,10000):
         for BATCH in range(len(training)//BATCH_SIZE):
-            gradient=np.zeros(shape=(30,51))
-            cost=np.zeros(shape=(30,1))
+            gradient=np.zeros(shape=(30,51),dtype=float)
+            cost=np.zeros(shape=(30,1),dtype=float)
             for NUM in range(BATCH*BATCH_SIZE,(BATCH+1)*BATCH_SIZE):
                 layer=np.matmul(weights,training[NUM])
                 gradient[0]=training[NUM]
 
                 for i in range(0,30):
                     if (i<15 and training_ans[NUM]==0) or (15<=i and training_ans[NUM]==1):
-                        cost[i,0]=(10-layer[i])**2
+                        cost[i,0]=(GOAL-layer[i])**2
                     else:
-                        cost[i,0]=-(-10-layer[i])**2;
+                        cost[i,0]=-(-GOAL-layer[i])**2;
 
                 gradient+=cost*training[NUM]
                 
             weights+=gradient*LEARNING_RATE
+            weights=clamp(weights)
             
         test(epoch_num)
     
